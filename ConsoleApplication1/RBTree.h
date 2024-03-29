@@ -62,30 +62,57 @@ int Table<Key, Value>::GetSize() const
 template<class Key, class Value>
 class SearchTreeTable : public Table<Key, Value> {
 public:
-	struct TTableRec {
+	struct Table {
 		Key key;
 		Value value;
 	};
 	struct Node
 	{
-		TTableRec data;
+		Table data;
 		Node* left;
 		Node* right;
 		Node* parent;
+		Node(Key key, Value value) {
+			left = nullptr;
+			right = nullptr;
+			data.key = key;
+			data.value = value; }
+		Node(Node* l, Node* r,Key key, Value value) {
+			left = l;
+			right = r;
+			data.key = key;
+			data.value = value;
+		}
 	};
 	Node* root;
-	SearchTreeTable() { root->parent = nullptr;  root->data = { 2,  8 }; }
-	SearchTreeTable(Node* p, int key, int value) { root = new Node(); root->parent = p; root->data.key = key; root->data.value = value; }
-	void print(Node* p) {
-		if (p == nullptr) return;
-		print(p->left); 
-		print(p->right);
+	SearchTreeTable() {root = new Node(2,8);}	
+	SearchTreeTable(int key, int value) { root = new Node(key, value); }
+	SearchTreeTable(SearchTreeTable p1,SearchTreeTable p2, int key, int value) {root = new Node(p1.root,p2.root,key,value);}
+	string toString() {
+		string res; 
+		res += "(" + std::to_string(root->data.key) + ", " + std::to_string(root->data.value) + ")";
+		return res;
+	}
+	void print(Node* node) {
+		if (node == nullptr) return;
+		print(node->left); 
+		cout << "(" << node->data.key << ", " << node->data.value << ")" << endl;
+		print(node->right);
 	}
 	Node* findNode(Key key, Node* node) {
-		if (node == nullptr) { return nullptr; }
-		if (key < node->data.key) { node = FindNode(key, node->left); }
-		if (key >node->data.key) { node = FindNode(key, node->right); }
-		return node;
+		if (node == nullptr) {
+			return nullptr;
+		}
+
+		if (key < node->data.key) {
+			return findNode(key, node->left);
+		}
+		else if (key > node->data.key) {
+			return findNode(key, node->right);
+		}
+		else {
+			return node; // Возвращаем узел, если ключ совпадает
+		}
 	}
 	Value* Find(Key key) {
 		Node* node = findNode(key, root);
@@ -130,16 +157,18 @@ public:
 		}
 	}
 	int Delete(Key _key) {
-		if (this->Find(_key) == nullptr) {
+		if ((this->Find(_key) == nullptr) || (root == nullptr)) {
 			// Узел с таким ключом не существует, удаление не требуется
 			return 0;
 		}
 		else {
-			deleteNode(root, _key);
+			root=deleteNode(root, _key);
 			return 1; // Успешное удаление узла
 		}
 	}
 	Node* deleteNode(Node* currentNode, Key _key) {
+		if (currentNode == nullptr) return nullptr;
+
 		if (_key < currentNode->data.key) {
 			currentNode->left = deleteNode(currentNode->left, _key);
 		}
@@ -147,9 +176,6 @@ public:
 			currentNode->right = deleteNode(currentNode->right, _key);
 		}
 		else {
-			// Узел для удаления найден
-
-			// Case 1: Узел без детей или с одним ребенком
 			if (currentNode->left == nullptr) {
 				Node* temp = currentNode->right;
 				delete currentNode;
@@ -160,15 +186,17 @@ public:
 				delete currentNode;
 				return temp;
 			}
-
-			// Case 2: Узел с двумя детьми
-			Node* temp = minValueNode(currentNode->left);
-			currentNode->data = temp->data;
-			currentNode->right = deleteNode(currentNode->right, temp->data.key);
+			else {
+				Node* temp = maxValueNode(currentNode->left);
+				currentNode->data = temp->data;
+				currentNode->left = deleteNode(currentNode->left, temp->data.key);
+			}
 		}
+
 		return currentNode;
 	}
-	Node* minValueNode(Node* node) {
+
+	Node* maxValueNode(Node* node) {
 		Node* current = node;
 		while (current->right != nullptr) {
 			current = current->right;
@@ -179,16 +207,17 @@ public:
 	bool IsTabEnded(void) const { return false; }
 	int GoNext(void) { return 0; }
 	Key GetKey(void) const { return this->GetKey(); }
-	Value* GetValuePtr(void) const { this->GetValuePtr(); }
-	 
+	Value* GetValuePtr(void) const {
+		return this->GetValuePtr(); 
+	}
 	 
 };
 template<class Key, class Value>
-class AWLTreeTable : public SearchTreeTable<Key, Value> {
+class AVLTreeTable : public SearchTreeTable<Key, Value> {
 private:
-	byte balance;
+	int balance;
 public:
-	Value* Find(Key key) {
+	/*Value* Find(Key key) {
 		Node* node = findNode(key, root);
 		if (node == nullptr) { return nullptr; }
 		return &node->data.value;
@@ -241,7 +270,7 @@ public:
 			balancir();
 			return 1; // Успешная вставка нового узла
 		}
-	}
+	}*/
 	void balancir() {}
 
 };

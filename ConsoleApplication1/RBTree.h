@@ -68,6 +68,7 @@ public:
 	};
 	struct Node
 	{
+		int nomer;
 		Table data;
 		Node* left;
 		Node* right;
@@ -76,18 +77,36 @@ public:
 			left = nullptr;
 			right = nullptr;
 			data.key = key;
-			data.value = value; }
-		Node(Node* l, Node* r,Key key, Value value) {
-			left = l;
-			right = r;
+			data.value = value;
+			number++; this->nomer = number;
+			this->parent = nullptr;
+		}
+		Node(Node* l, Node* r, Key key, Value value) {
+			left = l;    right = r;
 			data.key = key;
 			data.value = value;
+			l->parent = r->parent = this;
+			number++;   this->nomer = number;
+		}
+		void operator=(const Node& other){
+			parent = other.parent;
+			left = other.left;
+			right = other.right;
+			data.key = other.data.key;
+			data.value = other.data.value;
+			nomer = other.nomer;
 		}
 	};
+	
+
 	Node* root;
-	SearchTreeTable() {root = new Node(2,8);}	
-	SearchTreeTable(int key, int value) { root = new Node(key, value); }
-	SearchTreeTable(SearchTreeTable p1,SearchTreeTable p2, int key, int value) {root = new Node(p1.root,p2.root,key,value);}
+	
+	
+	static int number;
+	SearchTreeTable() { root = new Node(2, 8); root->parent = nullptr;}
+	SearchTreeTable(int key, int value) { root = new Node(key, value);  }
+	SearchTreeTable(SearchTreeTable p1, SearchTreeTable p2, int key, int value) { root = new Node(p1.root, p2.root, key, value); root->parent = nullptr; }
+
 	string toString() {
 		string res; 
 		res += "(" + std::to_string(root->data.key) + ", " + std::to_string(root->data.value) + ")";
@@ -96,14 +115,21 @@ public:
 	void print(Node* node) {
 		if (node == nullptr) return;
 		print(node->left); 
-		cout << "(" << node->data.key << ", " << node->data.value << ")" << endl;
+		//cout << "(Left potomok: ";
+		if (node->parent == nullptr)
+			cout << " parent: null,";
+		else 
+			cout << "Parent: "<<node->parent->data.key << ", ";
+		cout << "Key:" << node->data.key << ", Value: " << node->data.value<<endl;
+		/*if (node->right == nullptr)
+			cout << "null " << ")" << endl; 
+		else { cout << node->right->data.key << " )" << endl; }*/
 		print(node->right);
 	}
 	Node* findNode(Key key, Node* node) {
 		if (node == nullptr) {
 			return nullptr;
 		}
-
 		if (key < node->data.key) {
 			return findNode(key, node->left);
 		}
@@ -129,30 +155,28 @@ public:
 			Node* new_node = new Node(_key, _val);
 			if (root == nullptr) {
 				root = new_node; // Если дерево пустое, новый узел становится корнем
+				return 1; // Успешная вставка нового узла
 			}
-			else {
-				Node* current = root;
-				while (true) {
-					if (_key < current->data.key) {
-						if (current->left == nullptr) {
-							current->left = new_node; // Вставляем новый узел влево
-							break;
-						}
-						else {
-							current = current->left;
-						}
-					}
-					else if (_key > current->data.key) {
-						if (current->right == nullptr) {
-							current->right = new_node; // Вставляем новый узел вправо
-							break;
-						}
-						else {
-							current = current->right;
-						}
-					}
+			Node* current = root;
+			Node* parent = nullptr;
+			// Находим место для вставки новой вершины
+			while (current != nullptr) {
+				parent = current;
+				if (_key < current->data.key) {
+					current = current->left;
+				}
+				else {
+					current = current->right;
 				}
 			}
+			// Вставляем новую вершину и устанавливаем ссылку на родителя
+			if (_key < parent->data.key) {
+				parent->left = new_node;
+			}
+			else {
+				parent->right = new_node;
+			}
+			new_node->parent = parent;
 			return 1; // Успешная вставка нового узла
 		}
 	}
@@ -176,6 +200,7 @@ public:
 			currentNode->right = deleteNode(currentNode->right, _key);
 		}
 		else {
+			//случай для 0 или 1 потомка
 			if (currentNode->left == nullptr) {
 				Node* temp = currentNode->right;
 				delete currentNode;
@@ -186,13 +211,13 @@ public:
 				delete currentNode;
 				return temp;
 			}
+			//случай для 2 потомков
 			else {
 				Node* temp = maxValueNode(currentNode->left);
 				currentNode->data = temp->data;
 				currentNode->left = deleteNode(currentNode->left, temp->data.key);
 			}
 		}
-
 		return currentNode;
 	}
 
@@ -213,25 +238,52 @@ public:
 	 
 };
 template<class Key, class Value>
+int SearchTreeTable<Key, Value>::number = 0;
+template<class Key, class Value>
 class AVLTreeTable : public SearchTreeTable<Key, Value> {
-private:
-	int balance;
 public:
-	/*Value* Find(Key key) {
+	struct Table{
+		Key key;
+		Value value;
+	};
+	struct Node
+	{
+		Table data;
+		Node* left;
+		Node* right;
+		Node* parent;
+		unsigned char balance;
+		Node(Key key, Value value) {
+			left = nullptr;
+			right = nullptr;
+			data.key = key;
+			data.value = value;
+		}
+		Node(Node* l, Node* r, Key key, Value value) {
+			left = l;
+			right = r;
+			data.key = key;
+			data.value = value;
+			l->parent = r->parent = this;
+		}
+
+	};
+	Node* root;
+public:
+	AVLTreeTable() {
+		root = new Node(2, 8);
+		root->balance = 0; }
+	AVLTreeTable(int key, int value) {
+		root = new Node(key, value);
+		root->balance = 0; }
+	AVLTreeTable(AVLTreeTable p1, AVLTreeTable p2, int key, int value){
+		root = new Node(p1.root, p2.root, key, value);
+		root->balance = p2.root->alance-p1.root->balance;}
+	Value* Find(Key key)
+	{
 		Node* node = findNode(key, root);
 		if (node == nullptr) { return nullptr; }
 		return &node->data.value;
-	}
-	int Delete(Key _key) {
-		if (this->Find(_key) == nullptr) {
-			// Узел с таким ключом не существует, удаление не требуется
-			return 0;
-		}
-		else {
-			deleteNode(root, _key);
-			balancir();
-			return 1; // Успешное удаление узла
-		}
 	}
 	int Insert(Key _key, Value _val) {
 		if (this->Find(_key) != nullptr) {
@@ -243,37 +295,129 @@ public:
 			Node* new_node = new Node(_key, _val);
 			if (root == nullptr) {
 				root = new_node; // Если дерево пустое, новый узел становится корнем
+				return 1; // Успешная вставка нового узла
 			}
-			else {
-				Node* current = root;
-				while (true) {
-					if (_key < current->data.key) {
-						if (current->left == nullptr) {
-							current->left = new_node; // Вставляем новый узел влево
-							break;
-						}
-						else {
-							current = current->left;
-						}
-					}
-					else if (_key > current->data.key) {
-						if (current->right == nullptr) {
-							current->right = new_node; // Вставляем новый узел вправо
-							break;
-						}
-						else {
-							current = current->right;
-						}
-					}
+			Node* current = root;
+			Node* parent = nullptr;
+			// Находим место для вставки новой вершины
+			while (current != nullptr) {
+				parent = current;
+				if (_key < current->data.key) {
+					current = current->left;
+				}
+				else {
+					current = current->right;
 				}
 			}
-			balancir();
+			// Вставляем новую вершину и устанавливаем ссылку на родителя
+			if (_key < parent->data.key) {
+				parent->left = new_node;
+			}
+			else {
+				parent->right = new_node;
+			}
+			new_node->parent = parent;
 			return 1; // Успешная вставка нового узла
 		}
-	}*/
-	void balancir() {}
+	}
+	int Delete(Key _key) {
+		if ((this->Find(_key) == nullptr) || (root == nullptr)) {
+			// Узел с таким ключом не существует, удаление не требуется
+			return 0;
+		}
+		else {
+			root = deleteNode(root, _key);
+			return 1; // Успешное удаление узла
+		}
+	}
+	Node* deleteNode(Node* currentNode, Key _key) {
+		if (currentNode == nullptr) return nullptr;
+
+		if (_key < currentNode->data.key) {
+			currentNode->left = deleteNode(currentNode->left, _key);
+		}
+		else if (_key > currentNode->data.key) {
+			currentNode->right = deleteNode(currentNode->right, _key);
+		}
+		else {
+			//случай для 0 или 1 потомка
+			if (currentNode->left == nullptr) {
+				Node* temp = currentNode->right;
+				delete currentNode;
+				return temp;
+			}
+			else if (currentNode->right == nullptr) {
+				Node* temp = currentNode->left;
+				delete currentNode;
+				return temp;
+			}
+			//случай для 2 потомков
+			else {
+				Node* temp = maxValueNode(currentNode->left);
+				currentNode->data = temp->data;
+				currentNode->left = deleteNode(currentNode->left, temp->data.key);
+			}
+		}
+		return currentNode;
+	}
+
+	Node* maxValueNode(Node* node) {
+		Node* current = node;
+		while (current->right != nullptr) {
+			current = current->right;
+		}
+		return current;
+	}
+	Node* findNode(Key key, Node* node) {
+		if (node == nullptr) {
+			return nullptr;
+		}
+		if (key < node->data.key) {
+			return findNode(key, node->left);
+		}
+		else if (key > node->data.key) {
+			return findNode(key, node->right);
+		}
+		else {
+			return node; // Возвращаем узел, если ключ совпадает
+		}
+	}
+	void balancir(Node* node) {
+		if ((node.balance == -2) && (node->left.balance < 0)) 
+		{this->singleUpLeft(node); return;}
+		if ((node.balance == -2) && (node->left.balance > 0)) 
+		 { this->doubleUpLeft(node); return;}
+		if ((node.balance == 2) && (node->right.balance < 0)) 
+		{this->singleUpRight(node); return;	}
+		if ((node.balance == 2) && (node-right.balance > 0)) 
+		{this->doubleUpRight(node); return;	}
+	}
+	Node* singleUpLeft(Node* A) {
+		Node* B = A->left;
+		A->left = B->right;
+		B->right = A;
+
+		updateBalance(A);
+		updateBalance(B);
+
+		return B;
+	}
+
+	Node* singleUpRight(Node* A) {
+		Node* B = A->right;
+		A->right = B->left;
+		B->left = A;
+
+		updateBalance(A);
+		updateBalance(B);
+
+		return B;
+	}
+	Node* doubleUpLeft(Node*A){}
+	Node* doubleUpRight(Node*A){}
 
 };
+
 enum class Color { RED, BLACK };
 template<class Key, class Value>
 class RBTable: public SearchTreeTable<Key,Value> {

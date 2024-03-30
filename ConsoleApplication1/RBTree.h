@@ -276,91 +276,88 @@ public:
 			else { this->balance++; }
 			this->update_balance2();
 		}
-		void update_balance() {
+		Node* update_balance() {
 			if (this != nullptr) {
 				this->balance = get_height(this->right) - get_height(this->left);
 				if ((this->balance == 2) || (this->balance == -2)) {this->balancir(); }
 				this->parent->update_balance();
 			}
-			else return;
+			else return this;
 		}
 		int get_height(Node* node) {
 			if (node == nullptr) return 0;
 			return 1 + max(get_height(node->left),get_height(node->right));
 		}
-		void balancir() {
+		Node* balancir() {
 				if (this->balance == -2)
 				{
 					if (this->left->balance < 0)
 					{
-						cout << "1" << endl;
-						singleUpLeft(this);  return;
+						cout << "1" << endl; this->singleUpLeft();  return this;
 					}
 					if (this->left->balance > 0)
 					{
-						cout << "2" << endl; 
-						doubleUpLeft(this);  return;
+						cout << "2" << endl; this->doubleUpLeft();  return this;
 					}
 				}
 				if (this->balance == 2) {
 					if (this->right->balance < 0)
 					{
-						cout << "3" << endl; singleUpRight(this); return;
+						cout << "3" << endl; this->singleUpRight(); return this;
 					}
 					if (this->right->balance > 0)
 					{
-						cout << "4" << endl; doubleUpRight(this); return;
+						cout << "4" << endl; this->doubleUpRight(); return this;
 					}
 				}
-				return;
+				return this;
 		}
-		Node* singleUpLeft(Node* A) {
-			Node* B = A->left;
-			B->parent = A->parent;
-			A->left = B->right;
-			B->right = A;
-			A->parent = B;
-			A->update_balance();
+		Node* singleUpLeft() {
+			Node* B = this->left;
+			B->parent = this->parent;
+			this->left = B->right;
+			B->right = this;
+			this->parent = B;
+			this->update_balance();
 			B->update_balance();
 			return B;
 		}
-
-		Node* singleUpRight(Node* A) {
-			Node* B = A->right;
-			B->parent = A->parent;
-			A->right = B->left;
-			B->left = A;
-			A->parent = B;
-			A->update_balance();
+		Node* singleUpRight() {
+			Node* B = this->right;
+			B->parent = this->parent;
+			this->right = B->left;
+			B->left = this;
+			this->parent = B;
+			this->update_balance();
 			B->update_balance();
 			return B;
 		}
-		Node* doubleUpLeft(Node* A) {
-			Node* B = A->left;
+		Node* doubleUpLeft() {
+			Node* B = this->left;
 			Node* C = B->right;
-			C->parent = A->parent;
+			C->parent = this->parent;
 			B->right = C->left;
 			C->left = B;
-			A->left = C->right;
-			C->right = A;
+			this->left = C->right;
+			C->right = this;
 			B->parent = C;
-			A->parent = C;
-			A->update_balance();
+			this->parent = C;
+			this ->update_balance();
 			B->update_balance(); 
 			C->update_balance();
 			return C;
 		}
-		Node* doubleUpRight(Node* A) {
-			Node* B = A->right;
+		Node* doubleUpRight() {
+			Node* B = this->right;
 			Node* C = B->left;
-			C->parent = A->parent;
+			C->parent = this->parent;
 			B->left = C->right;
 			C->right = B;
-			A->right = C->left;
-			C->left = A;
+			this->right = C->left;
+			C->left = this;
 			B->parent = C;
-			A->parent = C;
-			A->update_balance();
+			this->parent = C;
+			this->update_balance();
 			B->update_balance();
 			C->update_balance();
 			return C;
@@ -467,8 +464,7 @@ public:
 				parent->right = new_node;
 			}
 			new_node->parent = parent;
-			parent->update_balance();
-			//new_node->parent->balancir();
+			new_node->update_balance();
 			return 1; // Успешная вставка нового узла
 		}
 	}

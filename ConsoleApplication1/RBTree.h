@@ -97,16 +97,11 @@ public:
 			nomer = other.nomer;
 		}
 	};
-	
-
-	Node* root;
-	
-	
+	Node* root;	
 	static int number;
 	SearchTreeTable() { root = new Node(2, 8); root->parent = nullptr;}
 	SearchTreeTable(int key, int value) { root = new Node(key, value);  }
 	SearchTreeTable(SearchTreeTable p1, SearchTreeTable p2, int key, int value) { root = new Node(p1.root, p2.root, key, value); root->parent = nullptr; }
-
 	string toString() {
 		string res; 
 		res += "(" + std::to_string(root->data.key) + ", " + std::to_string(root->data.value) + ")";
@@ -117,7 +112,7 @@ public:
 		print(node->left); 
 		//cout << "(Left potomok: ";
 		if (node->parent == nullptr)
-			cout << " parent: null,";
+			cout << "Parent: null, ";
 		else 
 			cout << "Parent: "<<node->parent->data.key << ", ";
 		cout << "Key:" << node->data.key << ", Value: " << node->data.value<<endl;
@@ -252,12 +247,14 @@ public:
 		Node* left;
 		Node* right;
 		Node* parent;
-		unsigned char balance;
+		int balance;
 		Node(Key key, Value value) {
 			left = nullptr;
 			right = nullptr;
 			data.key = key;
 			data.value = value;
+			this->parent = nullptr;
+			balance = 0;
 		}
 		Node(Node* l, Node* r, Key key, Value value) {
 			left = l;
@@ -265,8 +262,109 @@ public:
 			data.key = key;
 			data.value = value;
 			l->parent = r->parent = this;
+			//balance = this.update_balance();
+		}
+		
+		void update_balance2() {
+			Node* n = this->parent;
+			if (n == nullptr) {
+				if (n->left == this) { this->balance--; }
+				else { this->balance++; }
+				return;
+			}
+			if (n->left == this) { this->balance--; }
+			else { this->balance++; }
+			this->update_balance2();
+		}
+		void update_balance() {
+			if (this != nullptr) {
+				this->balance = get_height(this->right) - get_height(this->left);
+				if ((this->balance == 2) || (this->balance == -2)) {this->balancir(); }
+				this->parent->update_balance();
+			}
+			else return;
+		}
+		int get_height(Node* node) {
+			if (node == nullptr) return 0;
+			return 1 + max(get_height(node->left),get_height(node->right));
+		}
+		void balancir() {
+				if (this->balance == -2)
+				{
+					if (this->left->balance < 0)
+					{
+						cout << "1" << endl;
+						singleUpLeft(this);  return;
+					}
+					if (this->left->balance > 0)
+					{
+						cout << "2" << endl; 
+						doubleUpLeft(this);  return;
+					}
+				}
+				if (this->balance == 2) {
+					if (this->right->balance < 0)
+					{
+						cout << "3" << endl; singleUpRight(this); return;
+					}
+					if (this->right->balance > 0)
+					{
+						cout << "4" << endl; doubleUpRight(this); return;
+					}
+				}
+				return;
+		}
+		Node* singleUpLeft(Node* A) {
+			Node* B = A->left;
+			B->parent = A->parent;
+			A->left = B->right;
+			B->right = A;
+			A->parent = B;
+			A->update_balance();
+			B->update_balance();
+			return B;
 		}
 
+		Node* singleUpRight(Node* A) {
+			Node* B = A->right;
+			B->parent = A->parent;
+			A->right = B->left;
+			B->left = A;
+			A->parent = B;
+			A->update_balance();
+			B->update_balance();
+			return B;
+		}
+		Node* doubleUpLeft(Node* A) {
+			Node* B = A->left;
+			Node* C = B->right;
+			C->parent = A->parent;
+			B->right = C->left;
+			C->left = B;
+			A->left = C->right;
+			C->right = A;
+			B->parent = C;
+			A->parent = C;
+			A->update_balance();
+			B->update_balance(); 
+			C->update_balance();
+			return C;
+		}
+		Node* doubleUpRight(Node* A) {
+			Node* B = A->right;
+			Node* C = B->left;
+			C->parent = A->parent;
+			B->left = C->right;
+			C->right = B;
+			A->right = C->left;
+			C->left = A;
+			B->parent = C;
+			A->parent = C;
+			A->update_balance();
+			B->update_balance();
+			C->update_balance();
+			return C;
+		}
 	};
 	Node* root;
 public:
@@ -278,13 +376,65 @@ public:
 		root->balance = 0; }
 	AVLTreeTable(AVLTreeTable p1, AVLTreeTable p2, int key, int value){
 		root = new Node(p1.root, p2.root, key, value);
-		root->balance = p2.root->alance-p1.root->balance;}
+		root->balance = p2.root->balance-p1.root->balance;}
+	string toString() {
+		string res;
+		res += "(" + std::to_string(root->data.key) + ", " + std::to_string(root->data.value) +", "+ std::to_string(root->balance) + ")";
+		return res;
+	}
+	void print(Node* node) {
+		
+		if (node == nullptr) {
+			return;
+		}
+
+		cout << "Key:" << node->data.key << ", Value: " << node->data.value << ", Balance: " << node->balance;
+
+		if (node->parent == nullptr) {
+			cout << ", Parent: null";
+		}
+		else {
+			cout << ", Parent: " << node->parent->data.key;
+		}
+
+		if (node->left == nullptr) {
+			cout << ", Left Child: null";
+		}
+		else {
+			cout << ", Left Child: " << node->left->data.key;
+		}
+
+		if (node->right == nullptr) {
+			cout << ", Right Child: null" << endl;
+		}
+		else {
+			cout << ", Right Child: " << node->right->data.key << endl;
+		}
+
+		print(node->left);
+		print(node->right);
+	}
 	Value* Find(Key key)
 	{
 		Node* node = findNode(key, root);
 		if (node == nullptr) { return nullptr; }
 		return &node->data.value;
 	}
+	Node* findNode(Key key, Node* node) {
+		if (node == nullptr) {
+			return nullptr;
+		}
+		if (key < node->data.key) {
+			return findNode(key, node->left);
+		}
+		else if (key > node->data.key) {
+			return findNode(key, node->right);
+		}
+		else {
+			return node; // Возвращаем узел, если ключ совпадает
+		}
+	}
+
 	int Insert(Key _key, Value _val) {
 		if (this->Find(_key) != nullptr) {
 			// Узел с таким ключом уже существует, вставка не требуется
@@ -317,6 +467,8 @@ public:
 				parent->right = new_node;
 			}
 			new_node->parent = parent;
+			parent->update_balance();
+			//new_node->parent->balancir();
 			return 1; // Успешная вставка нового узла
 		}
 	}
@@ -360,7 +512,6 @@ public:
 		}
 		return currentNode;
 	}
-
 	Node* maxValueNode(Node* node) {
 		Node* current = node;
 		while (current->right != nullptr) {
@@ -368,53 +519,8 @@ public:
 		}
 		return current;
 	}
-	Node* findNode(Key key, Node* node) {
-		if (node == nullptr) {
-			return nullptr;
-		}
-		if (key < node->data.key) {
-			return findNode(key, node->left);
-		}
-		else if (key > node->data.key) {
-			return findNode(key, node->right);
-		}
-		else {
-			return node; // Возвращаем узел, если ключ совпадает
-		}
-	}
-	void balancir(Node* node) {
-		if ((node.balance == -2) && (node->left.balance < 0)) 
-		{this->singleUpLeft(node); return;}
-		if ((node.balance == -2) && (node->left.balance > 0)) 
-		 { this->doubleUpLeft(node); return;}
-		if ((node.balance == 2) && (node->right.balance < 0)) 
-		{this->singleUpRight(node); return;	}
-		if ((node.balance == 2) && (node-right.balance > 0)) 
-		{this->doubleUpRight(node); return;	}
-	}
-	Node* singleUpLeft(Node* A) {
-		Node* B = A->left;
-		A->left = B->right;
-		B->right = A;
-
-		updateBalance(A);
-		updateBalance(B);
-
-		return B;
-	}
-
-	Node* singleUpRight(Node* A) {
-		Node* B = A->right;
-		A->right = B->left;
-		B->left = A;
-
-		updateBalance(A);
-		updateBalance(B);
-
-		return B;
-	}
-	Node* doubleUpLeft(Node*A){}
-	Node* doubleUpRight(Node*A){}
+	
+	
 
 };
 

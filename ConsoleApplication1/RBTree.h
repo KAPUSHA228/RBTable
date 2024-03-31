@@ -380,36 +380,24 @@ public:
 		return res;
 	}
 	void print(Node* node) {
-		
-		if (node == nullptr) {
-			return;
-		}
-
-		cout << "Key:" << node->data.key << ", Value: " << node->data.value << ", Balance: " << node->balance;
-
-		if (node->parent == nullptr) {
-			cout << ", Parent: null";
-		}
-		else {
-			cout << ", Parent: " << node->parent->data.key;
-		}
-
-		if (node->left == nullptr) {
-			cout << ", Left Child: null";
-		}
-		else {
-			cout << ", Left Child: " << node->left->data.key;
-		}
-
-		if (node->right == nullptr) {
-			cout << ", Right Child: null" << endl;
-		}
-		else {
-			cout << ", Right Child: " << node->right->data.key << endl;
-		}
-
-		print(node->left);
-		print(node->right);
+		Node* n=node;
+		while (n->parent != nullptr) { n = node->parent;}
+		print2(n); }
+	void print2(Node* n) {
+		if (n == nullptr) return;
+		print2(n->left);
+		if (n->parent == nullptr)
+			cout << "Parent: null, ";
+		else
+			cout << "Parent: " << n->parent->data.key << ", ";
+		cout << "Key:" << n->data.key << ", Value: " << n->data.value << ", Balance: " << n->balance << ", Left potomok: ";
+		if (n->left == nullptr)
+			cout << "null " << ", ";
+		else { cout << n->left->data.key << " ,"; }
+		if (n->right == nullptr)
+			cout << "Right potomok: null " << " )" << endl;
+		else { cout << "Right potomok: " << n->right->data.key << " )" << endl; }
+		print2(n->right);
 	}
 	Value* Find(Key key)
 	{
@@ -577,7 +565,7 @@ bool RBTable<Key, Value>::IsTabEnded(void) const
 template<class Key, class Value>
 int RBTable<Key, Value>::GoNext(void)
 {
-	
+	return 0;
 }
 template<class Key, class Value>
 Key RBTable<Key, Value>::GetKey(void) const

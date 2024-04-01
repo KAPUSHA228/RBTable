@@ -612,3 +612,31 @@ public:
 
 
 };
+class MixTable {
+private:
+	SearchTreeTable <int, TPolinom>t;
+	AVLTreeTable <int, TPolinom>a;
+public:
+	void Add(int key, TPolinom p) {
+		a.Insert(key, p);
+		t.Insert(key, p);
+	}
+
+	void Delete(int key) {
+		a.Delete(key);
+		t.Delete(key);
+	}
+	void print() {
+		t.print(t.root);
+		a.root->print();
+	}
+	void Find(int id, int key) {
+		switch (id) {
+		case 1: t.Find(key); break;
+		case 2: a.Find(key); break;
+		default: break;
+		}
+	}
+
+
+};

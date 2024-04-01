@@ -337,6 +337,7 @@ class TPolinom
 	list<TMonom> list;
 public:
 	TPolinom();
+	TPolinom(TMonom t);
 	TPolinom(TPolinom& other);
 	TPolinom(TDynamicVector<TMonom> vec);//
 	TPolinom(string str);
@@ -360,6 +361,10 @@ TPolinom::TPolinom() //не проверял
 {
 	TMonom m(1, 2, 3, 4);
 	list.push_back(m);
+}
+TPolinom::TPolinom(TMonom t) //не проверял
+{
+	list.push_back(t);
 }
 
 TPolinom::TPolinom(TPolinom& other)//работает
@@ -625,7 +630,7 @@ public:
 		cout << "Key:" << node->data.key << ", Value: " << node->data.value.ToString() << ", Left potomok: ";
 		if (node->left == nullptr)
 			cout << "null, ";
-		else { cout << node->left->data.key <<" Right Potomok: "; }
+		else { cout << node->left->data.key << " Right Potomok: "; }
 		if (node->right == nullptr)
 			cout << "null " << ")" << endl;
 		else { cout << node->right->data.key << " )" << endl; }
@@ -805,7 +810,7 @@ public:
 			if (this != nullptr) {
 				this->balance = get_height(this->right) - get_height(this->left);
 				if ((this->balance == 2) || (this->balance == -2)) { this->balancir(); }
-				if (this->parent != nullptr) {this->parent->update_balance();}
+				if (this->parent != nullptr) { this->parent->update_balance(); }
 			}
 			else return this;
 		}
@@ -891,7 +896,7 @@ public:
 					(C->parent)->left = C;
 				}
 				else {
-					(C->parent)->right =C;
+					(C->parent)->right = C;
 					C->parent = this->parent;
 				}
 			}
@@ -942,20 +947,20 @@ public:
 				cout << "Parent: null, ";
 			else
 				cout << "Parent: " << this->parent->data.key << ", ";
-			cout << "Key:" << this->data.key /* << ", Value: " << n->data.value */ << ", Balance: " << this->balance << ", Left potomok: ";
+			cout << "Key:" << this->data.key  << ", Value: " << this->data.value.ToString() << ", Balance: " << this->balance << ", Left potomok: ";
 			if (this->left == nullptr)
 				cout << "null " << ", ";
 			else { cout << this->left->data.key << " ,"; }
 			if (this->right == nullptr)
 				cout << "Right potomok: null " << " )" << endl;
-			else { cout << "Right potomok: " <<this->right->data.key << " )" << endl; }
+			else { cout << "Right potomok: " << this->right->data.key << " )" << endl; }
 			this->right->print();
 		}
 	};
 	Node* root;
 public:
 	AVLTreeTable() {
-		root = new Node(2, 8);
+		TPolinom p; root = new Node(2, p);
 		root->balance = 0;
 	}
 	AVLTreeTable(int key, int value) {
@@ -971,12 +976,6 @@ public:
 		res += "(" + std::to_string(root->data.key) + ", " + std::to_string(root->data.value) + ", " + std::to_string(root->balance) + ")";
 		return res;
 	}
-	void print2(Node* node) {
-		Node* n = node;
-		while (n->parent != nullptr) { n = node->parent; }
-		print2(n);
-	}
-	
 	Value* Find(Key key)
 	{
 		Node* node = findNode(key, root);
@@ -1111,7 +1110,34 @@ public:
 
 
 };
+class MixTable {
+private:
+	SearchTreeTable <int, TPolinom>t;
+	AVLTreeTable <int,TPolinom>a;
+public:
+	void Add(int key, TPolinom p){
+		a.Insert(key, p);
+		t.Insert(key, p);
+	}
 
+	void Delete(int key) {
+		a.Delete(key);
+		t.Delete(key);
+	}
+	void print() {
+		t.print(t.root);
+		a.root->print();
+	}
+	void Find(int id, int key){
+		switch (id) {
+		case 1: t.Find(key); break;
+		case 2: a.Find(key); break;
+		default: break;
+		}
+	}
+
+
+};
 enum class Color { RED, BLACK };
 template<class Key, class Value>
 class RBTable : public SearchTreeTable<Key, Value> {
